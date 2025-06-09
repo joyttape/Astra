@@ -1,0 +1,395 @@
+<template>
+  <div class="container">
+    <div class="etapas">
+      <div class="passo inativo" @click="irParaPagina('carrinho')">
+        <img src="@/assets/carrinhocinza.svg" alt="Carrinho" />
+        <span>Passo 1:<br />Carrinho</span>
+      </div>
+      <div class="passo" @click="irParaPagina('pagamento')">
+        <img src="@/assets/carteirabranca.svg" alt="Pagamento" />
+        <span>Passo 2:<br />Pagamento</span>
+      </div>
+    </div>
+
+    <div class="conteudo">
+      <div class="produtos">
+        <h2>Carrinho de compras</h2>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Produto</th>
+              <th>Preço</th>
+              <th>Quantidade</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(produto, index) in carrinho" :key="produto.id">
+              <td><img src="@/assets/nescau.png" /></td>
+              <td>{{ produto.nome }}</td>
+              <td>R$ {{ produto.preco.toFixed(2) }}</td>
+              <td>{{ produto.quantidade }}</td>
+              <td>R$ {{ (produto.preco * produto.quantidade).toFixed(2) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="resumo">
+        <div class="sacola" @click="mostrarSacola = !mostrarSacola">
+          Sacola <span>{{ mostrarSacola ? '▲' : '▼' }}</span>
+        </div>
+
+        <div class="detalhes-sacola">
+          <p>Quantidade de Itens: <strong>{{ totalItens }}</strong></p>
+          <p>Quantidade de Produtos: <strong>{{ quantidadeProdutos }}</strong></p>
+          <p>Valor total: <strong>R$ {{ totalGeral.toFixed(2) }}</strong></p>
+        </div>
+
+        <div class="detalhes-sacola">
+          <p>Adicione aqui seu cupom:</p>
+          <input class="cupom" type="text" v-model="cupom" placeholder="Astra2025" />
+        </div>
+
+        <p class="metodo">Método de Pagamento</p>
+                  
+            <div class="pagamento-opcoes">
+                <button
+                :class="{ selecionado: botaoSelecionado === 'cartaocredito' }"
+                @click="botaoSelecionado = 'cartaocredito'"
+                >
+                <img :src="getImagem('cartaocredito')" alt="Cartão Crédito" />
+                <span>Cartão de Crédito</span>
+                </button>
+
+                <button
+                :class="{ selecionado: botaoSelecionado === 'pix' }"
+                @click="botaoSelecionado = 'pix'"
+                >
+                <img :src="getImagem('pix')" alt="Pix" />
+                <span>PIX</span>
+                </button>
+
+                <button
+                :class="{ selecionado: botaoSelecionado === 'cartaodebito' }"
+                @click="botaoSelecionado = 'cartaodebito'"
+                >
+                <img :src="getImagem('cartaodebito')" alt="Cartão Débito" />
+                <span>Cartão de Débito</span>
+                </button>
+
+                <button
+                :class="{ selecionado: botaoSelecionado === 'dinheiro' }"
+                @click="botaoSelecionado = 'dinheiro'"
+                >
+                <img :src="getImagem('dinheiro')" alt="Dinheiro" />
+                <span>Dinheiro</span>
+                </button>
+            </div>
+
+        <div style="margin-top: 2rem;">
+          <router-link to="/" class="btn-pagamento">Confirmar Compra</router-link>
+          <router-link to="/carrinho" class="btn-cancelar">Cancelar e Retornar</router-link>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+<script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const mostrarSacola = ref(false)
+
+const carrinho = ref([
+  {
+    id: 1,
+    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
+    preco: 10.31,
+    quantidade: 1,
+  },
+  {
+    id: 2,
+    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
+    preco: 10.31,
+    quantidade: 2,
+  },
+  {
+    id: 1,
+    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
+    preco: 10.31,
+    quantidade: 1,
+  },
+  {
+    id: 2,
+    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
+    preco: 10.31,
+    quantidade: 2,
+  },{
+    id: 1,
+    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
+    preco: 10.31,
+    quantidade: 1,
+  },
+  {
+    id: 2,
+    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
+    preco: 10.31,
+    quantidade: 2,
+  }
+])
+
+const totalItens = computed(() =>
+  carrinho.value.reduce((acc, p) => acc + p.quantidade, 0)
+)
+
+const totalGeral = computed(() =>
+  carrinho.value.reduce((acc, p) => acc + p.quantidade * p.preco, 0)
+)
+
+function alterarQtd(index, delta) {
+  const item = carrinho.value[index]
+  if (item.quantidade + delta >= 1) {
+    item.quantidade += delta
+  }
+}
+
+function remover(index) {
+  carrinho.value.splice(index, 1)
+}
+
+function irParaPagina(destino) {
+  if (destino === 'carrinho') router.push('/carrinho')
+  if (destino === 'pagamento') router.push('/carrinho/pagamento')
+}
+
+const botaoSelecionado = ref(null)
+
+const imagens = {
+  cartaocredito: {
+    ativo: new URL('../assets/CartaoCor.svg', import.meta.url).href,
+    inativo: new URL('../assets/CartaoCinza.svg', import.meta.url).href,
+  },
+  pix: {
+    ativo: new URL('../assets/PixCor.svg', import.meta.url).href,
+    inativo: new URL('../assets/PixCinza.svg', import.meta.url).href,
+  },
+  cartaodebito: {
+    ativo: new URL('../assets/CartaoCor.svg', import.meta.url).href,
+    inativo: new URL('../assets/CartaoCinza.svg', import.meta.url).href,
+  },
+  dinheiro: {
+    ativo: new URL('../assets/DinheiroCor.svg', import.meta.url).href,
+    inativo: new URL('../assets/DinheiroCinza.svg', import.meta.url).href,
+  },
+}
+
+function getImagem(botao) {
+  return botaoSelecionado.value === botao
+    ? imagens[botao].ativo
+    : imagens[botao].inativo
+}
+
+const quantidadeProdutos = computed(() => carrinho.value.length)
+
+
+</script>
+
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.etapas {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.passo {
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 10px;
+}
+
+.passo img {
+  width: 60px;
+  height: 60px;
+  border-radius: 20%;
+  background-color: #9747FF;
+  padding: 10px;
+  object-fit: contain;
+}
+
+.passo.inativo {
+  opacity: 0.5;
+}
+
+.conteudo {
+  display: flex;
+  gap: 2rem;
+  max-width: 100%;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.produtos {
+  flex: 1;
+  background-color: #f5f5f5;
+  padding: 2rem;
+  width: 100%;
+  border-radius: 10px;
+}
+
+.produtos table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.produtos img {
+  width: 50px;
+  height: auto;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.produtos td, .produtos th {
+  padding: 1.5rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.resumo {
+  position: sticky;
+  top: 2rem;
+  width: 350px;
+  background-color: #f5f5f5;
+  padding: 2rem;
+  border-radius: 10px;
+  height: fit-content;
+}
+
+.sacola {
+  background-color: #ddd;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.1rem;
+}
+
+.detalhes-sacola {
+  margin-bottom: 2rem;
+}
+
+.cupom {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 10px;
+  border: none;
+  background: #dcdcdc;
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.metodo {
+  font-weight: bold;
+  text-align: center;
+  margin: 2rem 0 1rem;
+}
+
+.pagamento-opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.btn-pagamento {
+  display: block;
+  width: 100%;
+  background-color: #05D950;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.btn-cancelar {
+  display: block;
+  width: 100%;
+  background-color: #d3d3d3;
+  color: #333;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+button {
+  padding: 1rem 2rem;
+  border: 2px solid #CFCBCB;
+  background-color: #E1DFDF;
+  color: #000000;
+  border-radius: 12px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  font-family: 'Montserrat', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+button.selecionado {
+  background-color: #DCF7E5;
+  border: 2px solid #05D950;
+  color: #000000;
+}
+
+button img {
+  width: 24px;
+  height: 24px;
+}
+
+</style>
+
+
