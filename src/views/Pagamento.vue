@@ -1,12 +1,12 @@
 <template>
   <div class="container">
     <div class="etapas">
-      <div class="passo inativo" @click="irParaPagina('carrinho')">
-        <img src="@/assets/carrinhocinza.svg" alt="Carrinho" />
+      <div class="passo" @click="irParaPagina('carrinho')">
+        <img :src="carrinhosIcon" alt="Carrinho" />
         <span>Passo 1:<br />Carrinho</span>
       </div>
-      <div class="passo" @click="irParaPagina('pagamento')">
-        <img src="@/assets/carteirabranca.svg" alt="Pagamento" />
+      <div class="passo inativo" @click="irParaPagina('pagamento')">
+        <img :src="carteiraIcon" alt="Pagamento" />
         <span>Passo 2:<br />Pagamento</span>
       </div>
     </div>
@@ -17,20 +17,19 @@
         <table>
           <thead>
             <tr>
-              <th></th>
               <th>Produto</th>
               <th>Preço</th>
               <th>Quantidade</th>
               <th>Total</th>
             </tr>
           </thead>
+
           <tbody>
             <tr v-for="(produto, index) in carrinho" :key="produto.id">
-              <td><img src="@/assets/nescau.png" /></td>
               <td>{{ produto.nome }}</td>
-              <td>R$ {{ produto.preco.toFixed(2) }}</td>
+              <td>R$ {{ produto.preco_unitario.toFixed(2) }}</td>
               <td>{{ produto.quantidade }}</td>
-              <td>R$ {{ (produto.preco * produto.quantidade).toFixed(2) }}</td>
+              <td>R$ {{ produto.subtotal.toFixed(2) }}</td>
             </tr>
           </tbody>
         </table>
@@ -99,68 +98,41 @@
 
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 const router = useRouter()
 const mostrarSacola = ref(false)
+const carrinho = ref([])
 
-const carrinho = ref([
-  {
-    id: 1,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 1,
-  },
-  {
-    id: 2,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 2,
-  },
-  {
-    id: 1,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 1,
-  },
-  {
-    id: 2,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 2,
-  },{
-    id: 1,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 1,
-  },
-  {
-    id: 2,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 2,
+onMounted(async () => {
+  await carregarCarrinho()
+  setInterval(carregarCarrinho, 2000)
+})
+
+
+import carrinhosIcon from '@/assets/carrinhocinza.svg'
+import carteiraIcon from '@/assets/carteirabranca.svg'
+
+async function carregarCarrinho() {
+  try {
+    const res = await axios.get('http://localhost:3000/api/carrinho')
+    carrinho.value = res.data
+  } catch (error) {
+    console.error('Erro ao carregar carrinho:', error)
   }
-])
+}
 
 const totalItens = computed(() =>
   carrinho.value.reduce((acc, p) => acc + p.quantidade, 0)
 )
 
 const totalGeral = computed(() =>
-  carrinho.value.reduce((acc, p) => acc + p.quantidade * p.preco, 0)
+  carrinho.value.reduce((acc, p) => acc + p.quantidade * p.preco_unitario, 0)
 )
 
-function alterarQtd(index, delta) {
-  const item = carrinho.value[index]
-  if (item.quantidade + delta >= 1) {
-    item.quantidade += delta
-  }
-}
-
-function remover(index) {
-  carrinho.value.splice(index, 1)
-}
+const quantidadeProdutos = computed(() => carrinho.value.length)
 
 function irParaPagina(destino) {
   if (destino === 'carrinho') router.push('/carrinho')
@@ -194,10 +166,9 @@ function getImagem(botao) {
     : imagens[botao].inativo
 }
 
-const quantidadeProdutos = computed(() => carrinho.value.length)
-
-
+const cupom = ref('')
 </script>
+
 
 <style scoped>
 .container {
@@ -229,7 +200,7 @@ const quantidadeProdutos = computed(() => carrinho.value.length)
   width: 60px;
   height: 60px;
   border-radius: 20%;
-  background-color: #9747FF;
+  background-color: #9747ff;
   padding: 10px;
   object-fit: contain;
 }

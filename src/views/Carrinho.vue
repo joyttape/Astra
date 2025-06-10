@@ -1,12 +1,12 @@
-<template>
+eu queria que ficasse tudo no centro da tela, porque não tá?: <template>
   <div class="container">
     <div class="etapas">
       <div class="passo" @click="irParaPagina('carrinho')">
-        <img src="@/assets/carrinhos.svg" alt="Carrinho" />
+        <img :src="carrinhosIcon" alt="Carrinho" />
         <span>Passo 1:<br />Carrinho</span>
       </div>
       <div class="passo inativo" @click="irParaPagina('pagamento')">
-        <img src="@/assets/carteira.svg" alt="Pagamento" />
+        <img :src="carteiraIcon" alt="Pagamento" />
         <span>Passo 2:<br />Pagamento</span>
       </div>
     </div>
@@ -17,18 +17,15 @@
         <table>
           <thead>
             <tr>
-            <th></th>
-              <th>Produto</th>
+              <th>Produto</th> <!-- Corrigi para ter título aqui -->
               <th>Preço</th>
               <th>Quantidade</th>
               <th>Total</th>
+              <th></th> <!-- Para o botão de remover -->
             </tr>
           </thead>
           <tbody>
             <tr v-for="(produto, index) in carrinho" :key="produto.id">
-                <td>
-                <img src="../assets/nescau.png">
-                </td>
               <td>
                 <span>{{ produto.nome }}</span>
               </td>
@@ -39,7 +36,9 @@
                 <button @click="alterarQtd(index, 1)">+</button>
               </td>
               <td>R$ {{ (produto.preco * produto.quantidade).toFixed(2) }}</td>
-              <td><button @click="remover(index)">✕</button></td>
+              <td>
+                <button @click="remover(index)" aria-label="Remover produto">✕</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -55,58 +54,38 @@
           <p>Valor total: <strong>R$ {{ totalGeral.toFixed(2) }}</strong></p>
         </div>
         <router-link to="/carrinho/pagamento" class="btn-pagamento">
-            <span>Ir para pagamento</span>
+          <span>Ir para pagamento</span>
         </router-link>
-
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+
+// Importação das imagens SVG para evitar problemas com caminho
+import carrinhosIcon from '@/assets/carrinhos.svg'
+import carteiraIcon from '@/assets/carteira.svg'
 
 const router = useRouter()
 const mostrarSacola = ref(false)
+const carrinho = ref([])
 
-const carrinho = ref([
-  {
-    id: 1,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 1,
-  },
-  {
-    id: 2,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 2,
-  },
-  {
-    id: 1,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 1,
-  },
-  {
-    id: 2,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 2,
-  },{
-    id: 1,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 1,
-  },
-  {
-    id: 2,
-    nome: 'Achocolatado Pó Nescau Lata Leve 350g Pague 330g',
-    preco: 10.31,
-    quantidade: 2,
+onMounted(async () => {
+  await carregarCarrinho()
+})
+
+async function carregarCarrinho() {
+  try {
+    const res = await fetch('http://localhost:3000/api/carrinho')
+    const data = await res.json()
+    carrinho.value = data
+  } catch (err) {
+    console.error('Erro ao carregar carrinho:', err)
   }
-])
+}
 
 const totalItens = computed(() =>
   carrinho.value.reduce((acc, p) => acc + p.quantidade, 0)
@@ -137,27 +116,23 @@ const quantidadeProdutos = computed(() => carrinho.value.length)
 
 <style scoped>
 .container {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   font-family: 'Montserrat', sans-serif;
-}
-
-button{
-  background-color: #05D950;
-  border: none;
-  padding: 0.5rem;
-  border-radius: 0.2rem;
-  width: 25px;
-  color:#f5f5f5
+  box-sizing: border-box;
 }
 
 .etapas {
   display: flex;
   gap: 2rem;
   margin-bottom: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: center;
 }
 
 .passo {
@@ -167,37 +142,36 @@ button{
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  padding: 10px
+  padding: 10px;
 }
 
 .passo img {
   width: 60px;
   height: 60px;
   border-radius: 20%;
-  background-color: #9747FF;
+  background-color: #9747ff;
   padding: 10px;
   object-fit: contain;
 }
-
 
 .passo.inativo {
   opacity: 0.5;
 }
 
 .conteudo {
+  max-width: 1200px;
+  width: 100%;
   display: flex;
   gap: 2rem;
-  max-width: 100%;
-  width: 100%;
-  align-items: flex-start;
+  justify-content: center;
 }
 
 .produtos {
   flex: 1;
   background-color: #f5f5f5;
   padding: 2rem;
-  width: 100%;
   border-radius: 10px;
+  max-width: 800px;
 }
 
 .produtos table {
@@ -212,7 +186,8 @@ button{
   vertical-align: middle;
 }
 
-.produtos td, .produtos th {
+.produtos td,
+.produtos th {
   padding: 1.5rem;
   text-align: left;
   vertical-align: middle;
@@ -223,8 +198,6 @@ button{
 }
 
 .resumo {
-  position: sticky;         
-  top: 2rem;               
   width: 350px;
   background-color: #f5f5f5;
   padding: 2rem;
@@ -244,15 +217,14 @@ button{
   font-size: 1.1rem;
 }
 
-
 .detalhes-sacola {
   margin-bottom: 2rem;
 }
 
 .btn-pagamento {
   display: inline-block;
-  text-decoration: none;    
-  background-color: #05D950;  /* Roxo */
+  text-decoration: none;
+  background-color: #05d950;
   color: white;
   font-weight: bold;
   font-size: 1.2rem;
@@ -265,6 +237,26 @@ button{
   white-space: nowrap;
 }
 
+button {
+  background-color: #05d950;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 0.2rem;
+  width: 25px;
+  color: #f5f5f5;
+  cursor: pointer;
+}
 
-
+@media (max-width: 1200px) {
+  .conteudo {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .produtos,
+  .resumo {
+    width: 100%;
+    max-width: 100%;
+  }
+}
 </style>
